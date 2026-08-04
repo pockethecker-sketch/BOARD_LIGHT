@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Schedule Control Center</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      width: 100%; max-width: 440px;
+      background: #1e293b; border-radius: 24px;
+      padding: 28px; border: 1px solid #334155;
+    }
+    h1 { font-size: 20px; text-align: center; margin-bottom: 20px; }
+    .card {
+      background: #0f172a; border-radius: 16px;
+      padding: 20px; margin-bottom: 20px; border: 1px solid #334155;
+    }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    .badge-on { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+    .badge-off { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .btn { padding: 10px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; }
+    .btn-on { background: #16a34a; } .btn-off { background: #dc2626; }
+    .sched-box { border-top: 1px dashed #334155; padding-top: 12px; }
+    .sched-title { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+    .time-inputs { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    input[type="time"] {
+      background: #1e293b; border: 1px solid #334155;
+      color: white; padding: 6px 10px; border-radius: 6px; width: 100%;
+    }
+    .btn-save { width: 100%; padding: 8px; background: #3b82f6; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+  <div class="container">
+    <h1>SMART SCHEDULER</h1>
+
+    <!-- NAME BOARD -->
+    <div class="card">
+      <div class="header">
+        <span>Name Board</span>
+        <span id="b1-badge" class="badge badge-off">OFF</span>
+      </div>
+      <div class="btn-grid">
+        <button class="btn btn-on" onclick="setBoard('NameBoard', true)">ON</button>
+        <button class="btn btn-off" onclick="setBoard('NameBoard', false)">OFF</button>
+      </div>
+      <div class="sched-box">
+        <div class="sched-title">Custom Operating Window</div>
+        <div class="time-inputs">
+          <input type="time" id="b1-on-time" value="10:00">
+          <span>to</span>
+          <input type="time" id="b1-off-time" value="17:00">
+        </div>
+        <button class="btn-save" onclick="saveSchedule('B1', 'b1-on-time', 'b1-off-time')">Update Schedule</button>
+      </div>
+    </div>
+
+    <!-- SCROLLING BOARD -->
+    <div class="card">
+      <div class="header">
+        <span>Scrolling Board</span>
+        <span id="b2-badge" class="badge badge-off">OFF</span>
+      </div>
+      <div class="btn-grid">
+        <button class="btn btn-on" onclick="setBoard('ScrollingBoard', true)">ON</button>
+        <button class="btn btn-off" onclick="setBoard('ScrollingBoard', false)">OFF</button>
+      </div>
+      <div class="sched-box">
+        <div class="sched-title">Custom Operating Window</div>
+        <div class="time-inputs">
+          <input type="time" id="b2-on-time" value="10:00">
+          <span>to</span>
+          <input type="time" id="b2-off-time" value="17:00">
+        </div>
+        <button class="btn-save" onclick="saveSchedule('B2', 'b2-on-time', 'b2-off-time')">Update Schedule</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMRB_qmz0o9a7INW-VyiadyTQotYjJbuI",
+      authDomain: "project-e8816510-c8d8-4d95-957.firebaseapp.com",
+      databaseURL: "https://project-e8816510-c8d8-4d95-957-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "project-e8816510-c8d8-4d95-957",
+      storageBucket: "project-e8816510-c8d8-4d95-957.firebasestorage.app",
+      messagingSenderId: "469909219568",
+      appId: "1:469909219568:web:16cd471e0cf4b47370ba35"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    db.ref('NameBoard').on('value', (s) => updateBadge('b1-badge', s.val() || false));
+    db.ref('ScrollingBoard').on('value', (s) => updateBadge('b2-badge', s.val() || false));
+
+    function updateBadge(id, state) {
+      const b = document.getElementById(id);
+      b.textContent = state ? 'ONLINE' : 'OFF';
+      b.className = `badge ${state ? 'badge-on' : 'badge-off'}`;
+    }
+
+    function setBoard(node, state) { db.ref(node).set(state); }
+
+    function saveSchedule(boardPrefix, onInputId, offInputId) {
+      const onVal = document.getElementById(onInputId).value;
+      const offVal = document.getElementById(offInputId).value;
+
+      if(!onVal || !offVal) return alert("Select valid times!");
+
+      const [onH, onM] = onVal.split(':').map(Number);
+      const [offH, offM] = offVal.split(':').map(Number);
+
+      const onMin = (onH * 60) + onM;
+      const offMin = (offH * 60) + offM;
+
+      db.ref(`Schedule/${boardPrefix}_ON`).set(onMin);
+      db.ref(`Schedule/${boardPrefix}_OFF`).set(offMin);
+
+      alert("Schedule updated successfully!");
+    }
+  </script>
+</body>
+</html>
