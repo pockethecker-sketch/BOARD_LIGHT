@@ -162,7 +162,6 @@
       const data = snapshot.val();
       if (!data) return;
 
-      // Populate input boxes using saved user times
       if (data.B1_SAVED_ON !== undefined) document.getElementById('b1-on-time').value = minToTimeStr(data.B1_SAVED_ON);
       if (data.B1_SAVED_OFF !== undefined) document.getElementById('b1-off-time').value = minToTimeStr(data.B1_SAVED_OFF);
       if (data.B1_ENABLE !== undefined) document.getElementById('b1-timer-toggle').checked = data.B1_ENABLE;
@@ -197,24 +196,44 @@
       return `${h < 10 ? '0' : ''}${h}:${m < 10 ? '0' : ''}${m}`;
     }
 
+    // CHECK IF CURRENT TIME IS WITHIN WINDOW AND AUTO-TURN ON IF NEEDED
+    function checkAndAutoTurnOn(prefix, onMin, offMin) {
+      const isEnabled = document.getElementById(prefix.toLowerCase() + '-timer-toggle').checked;
+      if (!isEnabled) return;
+
+      const now = new Date();
+      const currentMin = (now.getHours() * 60) + now.getMinutes();
+
+      let isInsideWindow = false;
+      if (onMin < offMin) {
+        isInsideWindow = (currentMin >= onMin && currentMin < offMin);
+      } else {
+        // Handles overnight windows (e.g., 10 PM to 6 AM)
+        isInsideWindow = (currentMin >= onMin || currentMin < offMin);
+      }
+
+      if (isInsideWindow) {
+        const boardNode = (prefix === 'B1') ? 'NameBoard' : 'ScrollingBoard';
+        db.ref(boardNode).set(true);
+      }
+    }
+
     // TOGGLE SCHEDULE ON / OFF
     function toggleSchedule(prefix, isEnabled) {
       db.ref(`Schedule/${prefix}_ENABLE`).set(isEnabled);
 
       if (isEnabled) {
-        // Restore actual times to Firebase so ESP32 executes them
         const onVal = document.getElementById(prefix.toLowerCase() + '-on-time').value;
         const offVal = document.getElementById(prefix.toLowerCase() + '-off-time').value;
-        saveSchedule(prefix, prefix.toLowerCase() + '-on-time', prefix.toLowerCase() + '-off-time');
+        saveSchedule(prefix, prefix.toLowerCase() + '-on-time', prefix.toLowerCase() + '-off-time', false);
       } else {
-        // Disable timer on ESP32 by sending -1 trigger values
         db.ref(`Schedule/${prefix}_ON`).set(-1);
         db.ref(`Schedule/${prefix}_OFF`).set(-1);
       }
     }
 
     // SAVE CUSTOM SCHEDULE
-    function saveSchedule(prefix, onId, offId) {
+    function saveSchedule(prefix, onId, offId, showAlert = true) {
       const onVal = document.getElementById(onId).value;
       const offVal = document.getElementById(offId).value;
 
@@ -226,18 +245,20 @@
       const onMin = (onH * 60) + onM;
       const offMin = (offH * 60) + offM;
 
-      // Always save permanent reference times
+      // Save permanent reference times
       db.ref(`Schedule/${prefix}_SAVED_ON`).set(onMin);
       db.ref(`Schedule/${prefix}_SAVED_OFF`).set(offMin);
 
-      // If timer switch is currently ON, write active trigger values
       const isEnabled = document.getElementById(prefix.toLowerCase() + '-timer-toggle').checked;
       if (isEnabled) {
         db.ref(`Schedule/${prefix}_ON`).set(onMin);
         db.ref(`Schedule/${prefix}_OFF`).set(offMin);
+
+        // Auto Turn-ON check
+        checkAndAutoTurnOn(prefix, onMin, offMin);
       }
 
-      alert("Schedule updated successfully!");
+      if (showAlert) alert("Schedule updated successfully!");
     }
   </script>
 </body>
