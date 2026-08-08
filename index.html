@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Relay Control Center</title>
+  <title>Smart Schedule Control Center</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       background-color: #0f172a;
       color: #f8fafc;
       display: flex;
@@ -17,164 +17,124 @@
       padding: 20px;
     }
     .container {
-      width: 100%;
-      max-width: 440px;
-      background: #1e293b;
-      border-radius: 24px;
-      padding: 28px;
-      border: 1px solid #334155;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      width: 100%; max-width: 440px;
+      background: #1e293b; border-radius: 24px;
+      padding: 28px; border: 1px solid #334155;
     }
-    h1 {
-      font-size: 20px;
-      text-align: center;
-      margin-bottom: 20px;
-      color: #f1f5f9;
-      letter-spacing: 0.5px;
-    }
+    h1 { font-size: 20px; text-align: center; margin-bottom: 20px; }
+    
     .system-card {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #0f172a;
-      padding: 12px 18px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      border: 1px solid #334155;
-      font-weight: 600;
-      font-size: 14px;
+      display: flex; justify-content: space-between; align-items: center;
+      background: #0f172a; padding: 12px 16px; border-radius: 12px;
+      margin-bottom: 20px; border: 1px solid #334155; font-size: 13px; font-weight: 600;
     }
+
     .card {
-      background: #0f172a;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border: 1px solid #334155;
+      background: #0f172a; border-radius: 16px;
+      padding: 20px; margin-bottom: 20px; border: 1px solid #334155;
     }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .title { font-size: 16px; font-weight: 600; }
-    .badge {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-      text-transform: uppercase;
-    }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
     .badge-on { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
     .badge-off { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
     
-    .btn-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .btn {
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-      color: white;
-      transition: opacity 0.2s;
-    }
-    .btn:active { opacity: 0.8; }
-    .btn-on { background: #16a34a; }
-    .btn-off { background: #dc2626; }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .btn { padding: 10px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; }
+    .btn-on { background: #16a34a; } .btn-off { background: #dc2626; }
     
-    .sched-box {
-      border-top: 1px dashed #334155;
-      padding-top: 14px;
-    }
-    .sched-title { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
-    .time-inputs {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
+    .sched-box { border-top: 1px dashed #334155; padding-top: 12px; }
+    .time-inputs { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
     input[type="time"] {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: white;
-      padding: 8px;
-      border-radius: 8px;
-      width: 100%;
-      outline: none;
-      font-size: 14px;
+      background: #1e293b; border: 1px solid #334155;
+      color: white; padding: 6px 10px; border-radius: 6px; width: 100%;
     }
-    .btn-save {
-      width: 100%;
-      padding: 10px;
-      background: #3b82f6;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
+    
+    /* Sliding Switch Styling */
+    .toggle-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; font-size: 13px; color: #94a3b8; font-weight: 600;
     }
-    .btn-save:hover { background: #2563eb; }
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #334155; transition: .3s; border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background-color: white; transition: .3s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #3b82f6; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .btn-save { width: 100%; padding: 8px; background: #3b82f6; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; }
   </style>
 
-  <!-- Firebase JavaScript SDK (v8) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
 
   <div class="container">
-    <h1>SMART RELAY DASHBOARD</h1>
+    <h1>SMART SCHEDULER</h1>
 
-    <!-- SYSTEM POWER STATUS CARD -->
+    <!-- SYSTEM STATUS -->
     <div class="system-card">
-      <span>Power Status:</span>
+      <span>System Status:</span>
       <span id="system-badge" class="badge badge-off">CHECKING...</span>
     </div>
 
-    <!-- NAME BOARD -->
+    <!-- NAME BOARD CARD -->
     <div class="card">
       <div class="header">
-        <span class="title">Name Board</span>
+        <span>Name Board</span>
         <span id="b1-badge" class="badge badge-off">OFF</span>
       </div>
       <div class="btn-grid">
-        <button class="btn btn-on" onclick="setBoard('NameBoard', true)">TURN ON</button>
-        <button class="btn btn-off" onclick="setBoard('NameBoard', false)">TURN OFF</button>
+        <button class="btn btn-on" onclick="setBoard('NameBoard', true)">ON</button>
+        <button class="btn btn-off" onclick="setBoard('NameBoard', false)">OFF</button>
       </div>
       <div class="sched-box">
-        <div class="sched-title">Daily Schedule Window</div>
+        <div class="toggle-row">
+          <span>Enable Timer Schedule</span>
+          <label class="switch">
+            <input type="checkbox" id="b1-timer-toggle" onchange="toggleSchedule('B1', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
         <div class="time-inputs">
           <input type="time" id="b1-on-time" value="10:00">
           <span>to</span>
           <input type="time" id="b1-off-time" value="17:00">
         </div>
-        <button class="btn-save" onclick="saveSchedule('B1', 'b1-on-time', 'b1-off-time')">Save Schedule</button>
+        <button class="btn-save" onclick="saveSchedule('B1', 'b1-on-time', 'b1-off-time')">Update Schedule</button>
       </div>
     </div>
 
-    <!-- SCROLLING BOARD -->
+    <!-- SCROLLING BOARD CARD -->
     <div class="card">
       <div class="header">
-        <span class="title">Scrolling Board</span>
+        <span>Scrolling Board</span>
         <span id="b2-badge" class="badge badge-off">OFF</span>
       </div>
       <div class="btn-grid">
-        <button class="btn btn-on" onclick="setBoard('ScrollingBoard', true)">TURN ON</button>
-        <button class="btn btn-off" onclick="setBoard('ScrollingBoard', false)">TURN OFF</button>
+        <button class="btn btn-on" onclick="setBoard('ScrollingBoard', true)">ON</button>
+        <button class="btn btn-off" onclick="setBoard('ScrollingBoard', false)">OFF</button>
       </div>
       <div class="sched-box">
-        <div class="sched-title">Daily Schedule Window</div>
+        <div class="toggle-row">
+          <span>Enable Timer Schedule</span>
+          <label class="switch">
+            <input type="checkbox" id="b2-timer-toggle" onchange="toggleSchedule('B2', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
         <div class="time-inputs">
           <input type="time" id="b2-on-time" value="10:00">
           <span>to</span>
           <input type="time" id="b2-off-time" value="17:00">
         </div>
-        <button class="btn-save" onclick="saveSchedule('B2', 'b2-on-time', 'b2-off-time')">Save Schedule</button>
+        <button class="btn-save" onclick="saveSchedule('B2', 'b2-on-time', 'b2-off-time')">Update Schedule</button>
       </div>
     </div>
   </div>
@@ -193,64 +153,91 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let lastHeartbeatTime = 0;
+    // 1. LISTEN TO RELAY STATES
+    db.ref('NameBoard').on('value', (s) => updateBadge('b1-badge', s.val() || false));
+    db.ref('ScrollingBoard').on('value', (s) => updateBadge('b2-badge', s.val() || false));
 
-    // 1. MONITOR ESP-01S HEARTBEAT FOR POWER STATUS
-    db.ref('System/Heartbeat').on('value', (snapshot) => {
-      lastHeartbeatTime = Date.now();
-      updateSystemBadge(true);
+    // 2. READ SAVED SCHEDULES FROM FIREBASE ON REFRESH
+    db.ref('Schedule').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+
+      // Populate input boxes using saved user times
+      if (data.B1_SAVED_ON !== undefined) document.getElementById('b1-on-time').value = minToTimeStr(data.B1_SAVED_ON);
+      if (data.B1_SAVED_OFF !== undefined) document.getElementById('b1-off-time').value = minToTimeStr(data.B1_SAVED_OFF);
+      if (data.B1_ENABLE !== undefined) document.getElementById('b1-timer-toggle').checked = data.B1_ENABLE;
+
+      if (data.B2_SAVED_ON !== undefined) document.getElementById('b2-on-time').value = minToTimeStr(data.B2_SAVED_ON);
+      if (data.B2_SAVED_OFF !== undefined) document.getElementById('b2-off-time').value = minToTimeStr(data.B2_SAVED_OFF);
+      if (data.B2_ENABLE !== undefined) document.getElementById('b2-timer-toggle').checked = data.B2_ENABLE;
     });
 
-    // Timeout check every 2 seconds
-    setInterval(() => {
-      if (Date.now() - lastHeartbeatTime > 4000) {
-        updateSystemBadge(false);
-      }
-    }, 2000);
+    // 3. HEARTBEAT MONITORING
+    let lastHeartbeat = 0;
+    db.ref('System/Heartbeat').on('value', () => { lastHeartbeat = Date.now(); updateSystemStatus(true); });
+    setInterval(() => { if (Date.now() - lastHeartbeat > 4000) updateSystemStatus(false); }, 2000);
 
-    function updateSystemBadge(isOnline) {
-      const badge = document.getElementById('system-badge');
-      if (isOnline) {
-        badge.textContent = "ESP POWERED ON";
-        badge.className = "badge badge-on";
+    function updateSystemStatus(isOnline) {
+      const b = document.getElementById('system-badge');
+      b.textContent = isOnline ? "POWERED ON" : "POWERED OFF / DISCONNECTED";
+      b.className = `badge ${isOnline ? 'badge-on' : 'badge-off'}`;
+    }
+
+    function updateBadge(id, state) {
+      const b = document.getElementById(id);
+      b.textContent = state ? 'ONLINE' : 'OFF';
+      b.className = `badge ${state ? 'badge-on' : 'badge-off'}`;
+    }
+
+    function setBoard(node, state) { db.ref(node).set(state); }
+
+    function minToTimeStr(totalMinutes) {
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      return `${h < 10 ? '0' : ''}${h}:${m < 10 ? '0' : ''}${m}`;
+    }
+
+    // TOGGLE SCHEDULE ON / OFF
+    function toggleSchedule(prefix, isEnabled) {
+      db.ref(`Schedule/${prefix}_ENABLE`).set(isEnabled);
+
+      if (isEnabled) {
+        // Restore actual times to Firebase so ESP32 executes them
+        const onVal = document.getElementById(prefix.toLowerCase() + '-on-time').value;
+        const offVal = document.getElementById(prefix.toLowerCase() + '-off-time').value;
+        saveSchedule(prefix, prefix.toLowerCase() + '-on-time', prefix.toLowerCase() + '-off-time');
       } else {
-        badge.textContent = "SYSTEM OFFLINE";
-        badge.className = "badge badge-off";
+        // Disable timer on ESP32 by sending -1 trigger values
+        db.ref(`Schedule/${prefix}_ON`).set(-1);
+        db.ref(`Schedule/${prefix}_OFF`).set(-1);
       }
     }
 
-    // 2. REAL-TIME BOARD STATE LISTENERS
-    db.ref('NameBoard').on('value', (s) => updateBoardBadge('b1-badge', s.val() || false));
-    db.ref('ScrollingBoard').on('value', (s) => updateBoardBadge('b2-badge', s.val() || false));
-
-    function updateBoardBadge(id, state) {
-      const badge = document.getElementById(id);
-      badge.textContent = state ? 'ONLINE' : 'OFF';
-      badge.className = `badge ${state ? 'badge-on' : 'badge-off'}`;
-    }
-
-    // 3. MANUAL SWITCHING
-    function setBoard(nodeName, state) {
-      db.ref(nodeName).set(state);
-    }
-
-    // 4. SAVE SCHEDULE TO FIREBASE BUCKET
-    function saveSchedule(prefix, onInputId, offInputId) {
-      const onVal = document.getElementById(onInputId).value;
-      const offVal = document.getElementById(offInputId).value;
+    // SAVE CUSTOM SCHEDULE
+    function saveSchedule(prefix, onId, offId) {
+      const onVal = document.getElementById(onId).value;
+      const offVal = document.getElementById(offId).value;
 
       if (!onVal || !offVal) return alert("Please select valid times!");
 
       const [onH, onM] = onVal.split(':').map(Number);
       const [offH, offM] = offVal.split(':').map(Number);
 
-      const onMinutes = (onH * 60) + onM;
-      const offMinutes = (offH * 60) + offM;
+      const onMin = (onH * 60) + onM;
+      const offMin = (offH * 60) + offM;
 
-      db.ref(`Schedule/${prefix}_ON`).set(onMinutes);
-      db.ref(`Schedule/${prefix}_OFF`).set(offMinutes);
+      // Always save permanent reference times
+      db.ref(`Schedule/${prefix}_SAVED_ON`).set(onMin);
+      db.ref(`Schedule/${prefix}_SAVED_OFF`).set(offMin);
 
-      alert("Schedule saved to Firebase!");
+      // If timer switch is currently ON, write active trigger values
+      const isEnabled = document.getElementById(prefix.toLowerCase() + '-timer-toggle').checked;
+      if (isEnabled) {
+        db.ref(`Schedule/${prefix}_ON`).set(onMin);
+        db.ref(`Schedule/${prefix}_OFF`).set(offMin);
+      }
+
+      alert("Schedule updated successfully!");
     }
   </script>
 </body>
